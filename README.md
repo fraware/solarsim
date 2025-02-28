@@ -1,4 +1,4 @@
-# SolarSim: Solar System 3D Simulation
+# SolarSim
 
 ## Overview
 
