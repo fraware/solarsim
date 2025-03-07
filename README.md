@@ -1,4 +1,4 @@
-# SolarSim
+# [SolarSim](https://solar-sim-showcase.lovable.app/)
 
 ## Overview
 
