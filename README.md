@@ -5,7 +5,7 @@
 This project is an advanced 3D simulation of the solar system, featuring enhanced physics and interactive visualization. It simulates the motion of celestial bodies—including the Sun, eight planets, Earth's Moon, and Pluto—using a velocity Verlet integrator with adaptive time-stepping, relativistic corrections (for Mercury), and basic collision detection. The simulation is visualized in 3D using Matplotlib and controlled via a Tkinter GUI, which offers real-time parameter adjustments, timeline scrubbing, and multiple camera views.
 
 <p align="center" width="100%">
-<img src="assets/simulation.png">
+<img src="assets/SOLARSIM.png">
 </p>
 
 ## Features
