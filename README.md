@@ -1,128 +1,197 @@
-# [SolarSim](https://solar-sim-showcase.lovable.app/)
+<h1 align="center">SolarSim</h1>
 
-## Overview
-
-This project is an advanced 3D simulation of the solar system, featuring enhanced physics and interactive visualization. It simulates the motion of celestial bodies—including the Sun, eight planets, Earth's Moon, and Pluto—using a velocity Verlet integrator with adaptive time-stepping, relativistic corrections (for Mercury), and basic collision detection. The simulation is visualized in 3D using Matplotlib and controlled via a Tkinter GUI, which offers real-time parameter adjustments, timeline scrubbing, and multiple camera views.
-
-<p align="center" width="100%">
-<img src="assets/SOLARSIM.png">
+<p align="center">
+  <strong>Three-dimensional N-body solar system simulation for the desktop</strong>
 </p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/fraware/solarsim/actions/workflows/ci.yml"><img src="https://github.com/fraware/solarsim/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/fraware/solarsim/blob/master/LICENSE"><img src="https://img.shields.io/github/license/fraware/solarsim?style=flat&labelColor=1a1a1a&color=5c4d3d" alt="License"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-3776ab?style=flat&logo=python&logoColor=white" alt="Python 3.11+">
+  <a href="https://github.com/fraware/solarsim"><img src="https://img.shields.io/badge/code-fraware%2Fsolarsim-24292f?style=flat&logo=github&logoColor=white" alt="Repository"></a>
+</p>
 
-- **Advanced Physics & Numerical Methods**
-  - **Velocity Verlet Integration:** A symplectic integrator for improved long-term energy conservation.
-  - **Adaptive Time-Stepping:** Automatically adjusts the time step based on inter-body distances.
-  - **Relativistic Corrections:** A simple correction for Mercury’s perihelion precession.
-  - **Collision Detection:** Merges bodies when they come within a specified proximity.
-- **Expanded Celestial Model**
+---
 
-  - Includes the Sun, Mercury, Venus, Earth, Moon, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto.
-  - Uses approximate orbital data; can be enhanced with precise astronomical data (e.g., via AstroPy).
+SolarSim integrates the major bodies of the solar system with **velocity Verlet** steps, an **adaptive timestep**, and a **Numba-accelerated** gravity kernel. You steer the run from a **Tkinter** window: Matplotlib draws trajectories in 3D, while sliders and camera modes keep exploration fluid. The core physics lives in plain Python modules, so you can script experiments or swap initial conditions without touching the UI.
 
-- **User Interactivity & Control**
+<p align="center">
+  <a href="https://github.com/fraware/solarsim"><b>github.com/fraware/solarsim</b></a>
+</p>
 
-  - Real-time adjustments for time step, simulation speed (steps per frame), and body-specific parameters.
-  - Multiple camera modes: Free, Follow, and Top-Down views.
-  - Timeline slider for scrubbing and replaying simulation trajectories.
-  - Real-time data overlays for simulation time (in days) and total energy.
-  - Placeholder toggle for GPU acceleration.
+---
 
-- **Visualization Enhancements**
-  - 3D visualization with a star-filled background.
-  - Labels and trajectory paths for each celestial body.
-  - Interactive navigation toolbar (zoom, pan, rotate).
+## Highlights
+
+| | |
+|:---|:---|
+| **Fidelity where it counts** | Symplectic-style Verlet integration, softening for close approaches, optional **illustrative** Mercury tweak (not full GR). |
+| **Performance** | Hot loop JIT-compiled; trajectory buffers capped so long runs stay responsive. |
+| **Interaction** | Pause, single-step, scrub the timeline, follow a planet, or pull back for a top-down view. |
+| **Extensibility** | Headless `SolarSystemSim`; optional **AstroPy** ephemeris via an extra install. |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph core [Core]
+    E[Ephemeris]
+    P[Physics Numba]
+    S[SolarSystemSim]
+  end
+  subgraph surface [Desktop]
+    G[GUI Matplotlib 3D]
+  end
+  E --> S
+  P --> S
+  S --> G
+```
+
+The GUI imports the simulator only; **simulation code does not depend on Tk or Matplotlib**, which keeps tests fast and CI headless.
+
+---
+
+## Quick start
+
+```bash
+git clone https://github.com/fraware/solarsim.git
+cd solarsim
+pip install -e .
+python -m solarsim
+```
+
+Prefer the entry script after install: `solarsim`. For a checkout without `pip install -e .`, you can still run `python solar_system_simulation_3D.py` (it adds `src` to the module path).
+
+**Developers** usually install tooling as well:
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
 
 ## Requirements
 
-- **Python 3.x**
-- **Required Python Packages:**
-  - [NumPy](https://numpy.org/)
-  - [Matplotlib](https://matplotlib.org/)
-  - [Tkinter](https://docs.python.org/3/library/tkinter.html) (usually included with Python)
-  - [Numba](http://numba.pydata.org/)
-- **Optional for Packaging:**
-  - [PyInstaller](https://www.pyinstaller.org/) for creating standalone executables
+- **Python** 3.11 or newer  
+- **Runtime:** NumPy, Matplotlib, Numba (versions in [`pyproject.toml`](pyproject.toml))  
+- **Tkinter:** Ships with many CPython builds on Windows and macOS; on Linux, install your distro’s Tk binding (e.g. Debian/Ubuntu: `python3-tk`)
 
-## Installation
+---
 
-1. **Clone the Repository:**
+## Using the application
 
-   ```bash
-   git clone https://github.com/yourusername/enhanced_solar_system.git
-   cd enhanced_solar_system
-   ```
+The control bar drives integration rate, playback, viewpoint, and history.
 
-2. **Install Dependencies:**
+<details>
+<summary><b>Control reference</b> (click to expand)</summary>
 
-Use pip to install the necessary packages:
+| Control | What it does |
+|:--------|:-------------|
+| **Base Time Step (s)** | Nominal step in seconds (default 86 400 = one day). Adaptive logic scales around this within a fixed band. |
+| **Steps / Frame** | Integration substeps per animation frame while running (1–100). |
+| **Pause · Resume · Step** | Pause freezes time; **Step** advances exactly one integration step while paused. |
+| **Camera** | **Free** — default bounds; **Follow** — frame a chosen body; **Top-Down** — overhead view. |
+| **Follow** | Body tracked in Follow mode (ignored when set to `None`). |
+| **Timeline** | Jump backward and forward along stored positions; resume to continue from the latest index. |
+| **Overlays** | Elapsed time in days and total mechanical energy. |
+| **Toolbar** | Standard Matplotlib tools for zoom, pan, and 3D rotation. |
 
-```bash
-pip install numpy matplotlib numba
+</details>
+
+---
+
+## Python API
+
+**Built-in approximate solar system:**
+
+```python
+from solarsim.simulation import SolarSystemSim
+
+sim = SolarSystemSim(base_dt=86_400)
+sim.step()
 ```
 
-## Running the Simulation
+**Ephemeris from AstroPy** (after `pip install 'solarsim[astropy]'`):
 
-To run the simulation, execute the main script:
+```python
+from solarsim.ephemeris import create_bodies_astropy
+from solarsim.simulation import SolarSystemSim
 
-```bash
-python enhanced_solar_system.py
+bodies = create_bodies_astropy("2020-01-01")
+sim = SolarSystemSim(86_400, body_factory=lambda: bodies)
 ```
 
-### Controls
+The Mercury correction is documented on `SolarSystemSim` in [`src/solarsim/simulation.py`](src/solarsim/simulation.py); treat it as educational, not astrometric-grade.
 
-- **Base Time Step (s):** Adjusts the simulation's base time step (default is 86,400 seconds = 1 day).
-- **Steps/Frame:** Sets the number of simulation steps executed per animation frame.
-- **Pause/Resume/Step:** Control the simulation flow.
-- **Camera Modes:** Choose between Free, Follow (centers on a selected body), or Top-Down views.
-- **Timeline Slider:** Scrub through the simulation timeline to replay trajectories.
-- **GPU Acceleration:** (Placeholder) Toggle for potential future GPU support.
-- **Data Overlays:** View real-time simulation time and total energy.
+---
 
-## Packaging as a Standalone Application
-
-To create a standalone executable using PyInstaller, follow these steps:
-
-1. **Install PyInstaller:**
-
-   ```bash
-   pip install pyinstaller
-
-   ```
-
-2. **Package the Application:**
-
-Run the following command in your project directory:
+## Development and CI
 
 ```bash
-pyinstaller --onefile --windowed enhanced_solar_system.py
+ruff check src tests
+ruff format --check src tests   # or: ruff format src tests
+mypy src
+pytest
 ```
 
-3. **Locate the Executable:**
+Set `MPLBACKEND=Agg` when no display is available (tests, SSH, CI). On Windows PowerShell: `$env:MPLBACKEND="Agg"`.
 
-The packaged executable will be located in the dist folder.
+Pull requests run [**CI**](.github/workflows/ci.yml) on Ubuntu and Windows (Python 3.11 and 3.12): Ruff, Mypy, Pytest. [**Release**](.github/workflows/release.yml) can produce a Windows PyInstaller binary on tags or manual dispatch.
 
-### Project Structure
+Contributor workflow: [**CONTRIBUTING.md**](CONTRIBUTING.md).
+
+---
+
+## Packaging
 
 ```bash
-enhanced_solar_system/
-├── enhanced_solar_system.py # Main simulation script
-├── README.md # Project documentation
-├── .gitignore # Git ignore rules (e.g., /dist, /build folders)
-└── build_app.sh / build_app.bat # Build scripts for packaging
+pip install pyinstaller
+pyinstaller solarsim.spec
 ```
 
-## Contributing
+Output lands in `dist/` (e.g. `solarsim.exe` on Windows). Helpers: [`build_app.bat`](build_app.bat), [`build_app.sh`](build_app.sh).
 
-Contributions are welcome! If you’d like to enhance the simulation further, please follow these steps:
+---
 
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Make your changes with clear commit messages.
-4. Open a pull request explaining your changes.
+## Repository layout
 
-Feel free to suggest improvements in areas such as numerical methods, physics enhancements, visualization, or performance optimization.
+```text
+solarsim/
+├── src/solarsim/
+│   ├── constants.py       # Physical constants
+│   ├── body.py            # State and trajectory ring
+│   ├── ephemeris.py       # Defaults + optional AstroPy
+│   ├── physics_numba.py   # JIT accelerations
+│   ├── simulation.py      # Integrator, collisions, energy
+│   └── gui/app.py         # Tk + Matplotlib front end
+├── tests/
+├── pyproject.toml
+├── solarsim.spec
+├── LICENSE
+├── README.md
+└── CONTRIBUTING.md
+```
 
-## License
+---
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+<details>
+<summary><b>Troubleshooting</b></summary>
+
+| Symptom | What to try |
+|:--------|:------------|
+| `_tkinter` missing | Install Tk for your Python (e.g. `python3-tk`). |
+| Tests or imports want a display | Export `MPLBACKEND=Agg` before running pytest or scripts. |
+| Editable install errors | Confirm Python ≥ 3.11, upgrade `pip`, run from the repo root. |
+| PyInstaller runtime gaps | Build on the target OS; read the PyInstaller log for missing hooks or DLLs. |
+
+</details>
+
+---
+
+## Contributing and license
+
+Improvements are welcome: fork the repo, open a PR, and follow [**CONTRIBUTING.md**](CONTRIBUTING.md).
+
+Released under the **MIT License** — see [**LICENSE**](LICENSE).

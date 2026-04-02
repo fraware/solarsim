@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solarsim"
+version = "0.1.0"
+description = "3D N-body solar system simulation with Tkinter and Matplotlib"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "SolarSim contributors" }]
+keywords = ["simulation", "n-body", "astronomy", "matplotlib"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "numba>=0.59",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8.0",
+    "mypy>=1.11",
+]
+astropy = ["astropy>=6.0"]
+
+[project.scripts]
+solarsim = "solarsim.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/fraware/solarsim"
+Repository = "https://github.com/fraware/solarsim"
+Issues = "https://github.com/fraware/solarsim/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+solarsim = ["py.typed"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+exclude = ["solarsim.spec"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+packages = ["solarsim"]
+
+[[tool.mypy.overrides]]
+module = ["matplotlib.*", "numba.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "solarsim.physics_numba"
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = "solarsim.gui.app"
+disallow_untyped_calls = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
